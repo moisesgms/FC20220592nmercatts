@@ -1,0 +1,182 @@
+class Produto:
+    def __init__(self, codigo, nome_produto, preco_unitario, quantidade_em_estoque, categoria_produto, data_validade=None, periodo_garantia=None):
+        self.codigo = codigo
+        self.nome_produto = nome_produto
+        self.preco_unitario = preco_unitario
+        self.quantidade_em_estoque = quantidade_em_estoque
+        self.categoria_produto = categoria_produto
+        self.data_validade = data_validade
+        self.periodo_garantia = periodo_garantia
+
+    def __str__(self):
+        validade_info = f"Validade: {self.data_validade}" if self.data_validade else "Sem validade"
+        garantia_info = f"Garantiá: {self.periodo_garantia}" if self.periodo_garantia else "Sem garantia"
+        return f"Código: {self.codigo}, Produto: {self.nome_produto}, Preço: R$ {self.preco_unitario:.2f}, Estoque: {self.quantidade_em_estoque}, Categoria: {self.categoria_produto}, {validade_info}, {garantia_info}"
+
+
+class Mercado:
+    def __init__(self):
+        self.estoque_produtos = {}
+        self.caixa_aberto = False
+        self.saldo_inicial = 0.0
+        self.saldo_atual = 0.0
+        self.historico_vendas = []
+
+    def abrir_caixa(self):
+        if not self.caixa_aberto:
+            self.saldo_inicial = float(input("Informe o saldo inicial para o caixa: R$ "))
+            self.saldo_atual = self.saldo_inicial
+            self.caixa_aberto = True
+            print(f"Caixa aberto com R$ {self.saldo_inicial:.2f} de saldo inicial.")
+        else:
+            print("O caixa já está aberto.")
+
+    def fechar_caixa(self):
+        if self.caixa_aberto:
+            print(f"Caixa fechado. Saldo final: R$ {self.saldo_atual:.2f}")
+            self.caixa_aberto = False
+        else:
+            print("O caixa já está fechado.")
+
+    def adicionar_produto(self):
+        codigo = int(input("Digite o código do produto: "))
+        if codigo in self.estoque_produtos:
+            print("Produto já registrado no estoque.")
+            return
+        
+        nome_produto = input("Nome do produto: ")
+        preco_unitario = float(input("Preço unitário (R$): "))
+        quantidade_em_estoque = int(input("Quantidade disponível no estoque: "))
+        categoria_produto = input("Categoria (ex: alimentos, utensílios, eletrônicos): ")
+        data_validade = input("Data de validade (deixe em branco se não houver): ")
+        periodo_garantia = input("Período de garantia (deixe em branco se não houver): ")
+
+        produto = Produto(codigo, nome_produto, preco_unitario, quantidade_em_estoque, categoria_produto, 
+                          data_validade or None, periodo_garantia or None)
+        self.estoque_produtos[codigo] = produto
+        print(f"Produto {nome_produto} adicionado com sucesso.")
+
+    def consultar_produto(self):
+        codigo = int(input("Informe o código do produto para consulta: "))
+        produto = self.estoque_produtos.get(codigo)
+        if produto:
+            print("Detalhes do produto:", produto)
+        else:
+            print("Produto não encontrado no estoque.")
+
+    def remover_produto(self):
+        codigo = int(input("Informe o código do produto para remoção: "))
+        if codigo in self.estoque_produtos:
+            del self.estoque_produtos[codigo]
+            print("Produto removido do estoque com sucesso.")
+        else:
+            print("Produto não encontrado no estoque.")
+
+    def realizar_venda(self):
+        if not self.caixa_aberto:
+            print("O caixa precisa estar aberto para realizar vendas.")
+            return
+
+        total_venda = 0.0
+        itens_vendidos = {}
+
+        while True:
+            codigo = int(input("Informe o código do produto (ou 0 para finalizar a venda): "))
+            if codigo == 0:
+                break
+
+            produto = self.estoque_produtos.get(codigo)
+            if produto:
+                quantidade = int(input(f"Quantidade de {produto.nome_produto} para venda: "))
+                if produto.quantidade_em_estoque >= quantidade:
+                    valor_total = produto.preco_unitario * quantidade
+                    produto.quantidade_em_estoque -= quantidade
+                    total_venda += valor_total
+                    self.saldo_atual += valor_total
+
+                    if produto.nome_produto in itens_vendidos:
+                        itens_vendidos[produto.nome_produto]['quantidade'] += quantidade
+                        itens_vendidos[produto.nome_produto]['valor'] += valor_total
+                    else:
+                        itens_vendidos[produto.nome_produto] = {'quantidade': quantidade, 'valor': valor_total}
+
+                    self.historico_vendas.append((produto.nome_produto, quantidade, valor_total))
+                    print(f"Produto {produto.nome_produto} adicionado ao carrinho.")
+                else:
+                    print(f"Estoque insuficiente. Disponível: {produto.quantidade_em_estoque}")
+            else:
+                print("Produto não encontrado.")
+
+        print(f"\nResumo da venda:")
+        for nome, info in itens_vendidos.items():
+            print(f"{info['quantidade']} x {nome}: R$ {info['valor']:.2f}")
+        print(f"Total da venda: R$ {total_venda:.2f}")
+
+    def verificar_produtos_vencendo(self):
+        print("\nProdutos com data de vencimento próxima:")
+        for produto in self.estoque_produtos.values():
+            if produto.data_validade:
+                print(produto)
+
+    def verificar_estoque_baixo(self):
+        print("\nProdutos com estoque baixo (menos de 5 unidades):")
+        for produto in self.estoque_produtos.values():
+            if produto.quantidade_em_estoque < 5:
+                print(produto)
+
+
+def exibir_menu_principal():
+    print("\nEscolha uma opção:")
+    print("1 - Iniciar Operação de Caixa")
+    print("2 - Acessar Menu de Administração de Produtos")
+    print("3 - Encerrar Operação de Caixa")
+    opcao = int(input("Opção: "))
+    return opcao
+
+
+def menu_administracao_produtos():
+    print("\nMenu de Administração de Produtos:")
+    print("1 - Registrar Novo Item no Estoque")
+    print("2 - Consultar Produto Disponível")
+    print("3 - Remover Item do Inventário")
+    print("4 - Realizar Venda de Produtos")
+    print("5 - Verificar Produtos com Vencimento Imediato")
+    print("6 - Verificar Produtos com Estoque Crítico")
+    print("7 - Voltar ao Menu Principal")
+    opcao = int(input("Escolha uma opção: "))
+    return opcao
+
+
+def executar_mercado():
+    mercado = Mercado()
+
+    while True:
+        opcao = exibir_menu_principal()
+
+        if opcao == 1:
+            mercado.abrir_caixa()
+        elif opcao == 2:
+            while True:
+                menu_opcao = menu_administracao_produtos()
+
+                if menu_opcao == 1:
+                    mercado.adicionar_produto()
+                elif menu_opcao == 2:
+                    mercado.consultar_produto()
+                elif menu_opcao == 3:
+                    mercado.remover_produto()
+                elif menu_opcao == 4:
+                    mercado.realizar_venda()
+                elif menu_opcao == 5:
+                    mercado.verificar_produtos_vencendo()
+                elif menu_opcao == 6:
+                    mercado.verificar_estoque_baixo()
+                elif menu_opcao == 7:
+                    break
+        elif opcao == 3:
+            mercado.fechar_caixa()
+            break
+
+
+if __name__ == "__main__":
+    executar_mercado()
