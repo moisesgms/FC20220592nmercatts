@@ -1,4 +1,4 @@
-Descrição Geral do Sistema
+Descrição Geral do Sistema: 
 Este sistema foi projetado para gerenciar as operações de uma loja ou mercado, permitindo o controle de estoque, registro de produtos, vendas e administração do caixa. Ele simula o processo completo de uma venda, desde a entrada de novos produtos no estoque até a finalização das transações de venda. O sistema foi estruturado de forma a facilitar a consulta, adição e remoção de produtos, bem como a verificação de produtos com vencimento próximo ou com estoque baixo.
 Funcionalidades do Sistema
 Gerenciamento do Caixa:
